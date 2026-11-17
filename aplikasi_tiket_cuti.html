@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="id">
+<head>
+<title>Sistem Tiket dan Cuti</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: header dengan pemilih peran, tab per peran, satu kolom konten dengan form di atas dan hasil di bawah */
+:root{--bg:#f4f6f9;--fg:#15202d;--muted:#5b6777;--line:#d6dce5;--card:#fff;--accent:#1d5fa6;--accent-fg:#fff;--accent-soft:#e3edf8;
+--ok:#1b7a43;--ok-bg:#e1f3e7;--warn:#9a6200;--warn-bg:#fcefd2;--bad:#b3261e;--bad-bg:#fbe4e2;--info:#1d5fa6;--info-bg:#e3edf8;
+--fh:'Space Grotesk','Inter',sans-serif;--fb:'Inter',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f151d;--fg:#e5eaf1;--muted:#98a4b4;--line:#283342;--card:#17202b;--accent:#7fb0ea;--accent-fg:#0b1a2c;--accent-soft:#1c2a3c;
+--ok:#6fd49a;--ok-bg:#16301f;--warn:#f0c56a;--warn-bg:#352a10;--bad:#ff8f87;--bad-bg:#3a1b19;--info:#7fb0ea;--info-bg:#1c2a3c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f151d;--fg:#e5eaf1;--muted:#98a4b4;--line:#283342;--card:#17202b;--accent:#7fb0ea;--accent-fg:#0b1a2c;--accent-soft:#1c2a3c;
+--ok:#6fd49a;--ok-bg:#16301f;--warn:#f0c56a;--warn-bg:#352a10;--bad:#ff8f87;--bad-bg:#3a1b19;--info:#7fb0ea;--info-bg:#1c2a3c;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--fb);font-size:14px;line-height:1.5;
+padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--fh);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:22px} h2{font-size:18px} h3{font-size:16px}
+p{margin:0}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.sub{color:var(--muted);font-size:12px}
+label{display:flex;flex-direction:column;gap:4px;font-weight:500;font-size:13px;min-width:0}
+input,select,button{font:inherit;color:inherit}
+input,select{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{background:var(--accent);color:var(--accent-fg);border:0;border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+button.link{background:none;color:var(--accent);padding:0;text-decoration:underline;font-weight:500;text-align:left}
+button.danger{background:var(--bad);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{background:none;color:var(--muted);border-radius:6px 6px 0 0;border-bottom:2px solid transparent;padding:8px 14px}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.form label{flex:1 1 150px}
+.checks{display:flex;flex-wrap:wrap;gap:6px 14px}
+.checks label{flex-direction:row;align-items:center;gap:6px;font-weight:400;flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+.r{text-align:right}.num{font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.b-Confirmed,.b-Disetujui,.b-ok{background:var(--ok-bg);color:var(--ok)}
+.b-Booked,.b-info{background:var(--info-bg);color:var(--info)}
+.b-Waiting,.b-Menunggu,.b-warn{background:var(--warn-bg);color:var(--warn)}
+.b-Cancelled,.b-bad{background:var(--bad-bg);color:var(--bad)}
+.alert{padding:10px 12px;border-radius:6px;font-weight:500}
+.alert.ok{background:var(--ok-bg);color:var(--ok)}.alert.bad{background:var(--bad-bg);color:var(--bad)}.alert.info{background:var(--info-bg);color:var(--info)}
+.empty{color:var(--muted);padding:12px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{background:var(--card);color:var(--fg);border:1px solid var(--line)}
+.chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.mail{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:12px;display:flex;flex-direction:column;gap:4px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rp=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
+const pad=n=>String(n).padStart(2,'0');
+const fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const dl=s=>{const [y,m,d]=s.split('-');return (+d)+' '+BLN[m-1].slice(0,3)+' '+y};
+
+/* ---------- Data penerbangan ---------- */
+const KOTA={CGK:'Jakarta',SUB:'Surabaya',DPS:'Denpasar',YIA:'Yogyakarta',KNO:'Medan',UPG:'Makassar'};
+const MASK=[['Garuda Indonesia','GA',1.35],['Batik Air','ID',1.1],['Citilink','QG',0.9],['Lion Air','JT',0.8],['AirAsia','QZ',0.75]];
+let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const FL=[];let fid=1;
+const start=new Date();start.setHours(0,0,0,0);
+for(let d=1;d<=10;d++){const dt=new Date(start);dt.setDate(dt.getDate()+d);
+ for(const a in KOTA)for(const b in KOTA){if(a===b)continue;
+  const n=2+Math.floor(rnd()*2);
+  for(let i=0;i<n;i++){const m=MASK[Math.floor(rnd()*MASK.length)];
+   const jam=pad(5+Math.floor(rnd()*17))+':'+['00','15','30','45'][Math.floor(rnd()*4)];
+   FL.push({id:fid++,kode:m[1]+(100+Math.floor(rnd()*800)),asal:a,tujuan:b,tgl:fmt(dt),jam,maskapai:m[0],
+    harga:Math.round((450000+rnd()*1300000)*m[2]/10000)*10000,kursi:rnd()<0.05?0:3+Math.floor(rnd()*38)});}}}
+FL.sort((x,y)=>(x.tgl+x.jam).localeCompare(y.tgl+y.jam));
+const fl=id=>FL.find(f=>f.id===+id);
+
+/* ---------- Pengguna, booking, email ---------- */
+const USERS={u1:{nama:'Andi Pratama',email:'andi@contoh.id'},
+ m1:{nama:'Sinta Wulandari',email:'sinta@contoh.id',profil:{namaLengkap:'Sinta Wulandari',noIdentitas:'',tglLahir:'1993-04-12',telepon:'',kewarganegaraan:'Indonesia'}},
+ t1:{nama:'Budi Santoso',email:'budi@contoh.id'},v1:{nama:'Dewi Lestari',email:'dewi@contoh.id'},v2:{nama:'Agus Salim',email:'agus@contoh.id'},h1:{nama:'Rina Kusuma',email:'rina@contoh.id'}};
+const ROLES=[{k:'pengguna',l:'Pengguna',u:'u1'},{k:'member',l:'Member Frequent Traveller',u:'m1'},{k:'travel',l:'Manajer Travel',u:'t1'},{k:'pengunjung',l:'Pengunjung',u:'v1'},{k:'hrd',l:'Manajer HRD',u:'h1'}];
+const BK=[],EM=[];
+function newRef(){let r;do{r='TK'+Math.random().toString(36).slice(2,6).toUpperCase()}while(BK.some(b=>b.ref===r));return r}
+function addBk(f,owner,nama,by,status,ref){f.kursi=Math.max(0,f.kursi-1);const b={ref:ref||newRef(),fid:f.id,owner,penumpang:nama,by:by||null,status:status||'Booked',at:new Date()};BK.push(b);return b}
+[[5,'u1','Confirmed','TKT001'],[40,'u1','Waiting for the Payment','TKT002'],[90,'m1','Booked','TKT003'],[130,'m1','Confirmed','TKT004'],[170,'v1','Booked','TKT005'],[210,'v2','Waiting for the Payment','TKT006'],[260,'u1','Booked','TKT007']]
+ .forEach(([i,o,s,r])=>{const f=FL[i];f.kursi=Math.max(f.kursi,5);addBk(f,o,USERS[o].nama,o==='v1'||o==='v2'?'t1':null,s,r)});
+
+/* ---------- Data cuti ---------- */
+const THN=new Date().getFullYear();
+const PEG=[{id:1,nama:'Ahmad Fauzi',jatah:12},{id:2,nama:'Bella Anggraini',jatah:12},{id:3,nama:'Chandra Wijaya',jatah:12},{id:4,nama:'Dina Maharani',jatah:12},{id:5,nama:'Eko Prasetyo',jatah:12},{id:6,nama:'Fitri Handayani',jatah:12}];
+const y=THN;
+const CUTI=[[1,y-1+'-12-26',y-1+'-12-30','Disetujui'],[1,y+'-03-16',y+'-03-18','Disetujui'],[1,y+'-12-21',y+'-12-26','Menunggu'],
+[2,y+'-05-04',y+'-05-08','Disetujui'],[2,y+'-12-22',y+'-12-26','Disetujui'],[3,y+'-02-09',y+'-02-10','Disetujui'],[3,y+'-12-14',y+'-12-18','Menunggu'],
+[4,y+'-07-01',y+'-07-07','Disetujui'],[4,y+'-12-24',y+'-12-26','Disetujui'],[5,y+'-11-23',y+'-11-27','Disetujui'],[5,y+'-12-01',y+'-12-03','Menunggu'],[6,y+'-08-17',y+'-08-18','Disetujui'],[6,y+'-12-22',y+'-12-24','Disetujui']]
+ .map(([p,m,s,st])=>({p,mulai:m,selesai:s,status:st}));
+const lama=c=>Math.round((new Date(c.selesai)-new Date(c.mulai))/864e5)+1;
+const peg=id=>PEG.find(p=>p.id===+id);
+
+/* ---------- Status & peran ---------- */
+const S={role:'pengguna',tab:{},confirm:null};
+const ROLE=()=>ROLES.find(r=>r.k===S.role);
+const TABS={pengguna:[['cari','Cari penerbangan'],['pesanan','Pesanan saya']],
+ member:[['cari','Cari dan pesan'],['multi','Multi-destinasi'],['bandingkan','Bandingkan'],['pesanan','Pesanan saya'],['profil','Profil dan validasi']],
+ travel:[['status','Status booking'],['untuk','Pesan untuk pengunjung'],['otor','Otorisasi tiket']],
+ pengunjung:[['tiket','Tiket saya'],['inbox','Kotak masuk email']],hrd:[['cuti','Cuti pegawai']]};
+const badge=s=>`<span class="badge b-${s.split(' ')[0]}">${esc(s)}</span>`;
+const notif=(t,k)=>`<div class="alert ${k}" role="status">${t}</div>`;
+const kotaOpts=(all)=>(all?'<option value="">Semua kota</option>':'')+Object.entries(KOTA).map(([c,n])=>`<option value="${c}">${n} (${c})</option>`).join('');
+const checks=(name)=>`<div class="checks" role="group" aria-label="Tujuan">${Object.entries(KOTA).map(([c,n])=>`<label><input type="checkbox" name="${name}" value="${c}">${n}</label>`).join('')}</div>`;
+const sel=n=>[...document.querySelectorAll(`input[name="${n}"]:checked`)].map(i=>i.value);
+
+function tbl(list,pesan=true){
+ if(!list.length)return '<p class="empty">Tidak ada penerbangan yang cocok. Ubah tanggal, asal, atau tujuan.</p>';
+ return `<div class="tw"><table><thead><tr><th>Jadwal</th><th>Rute</th><th>Maskapai</th><th class="r">Harga</th>${pesan?'<th></th>':''}</tr></thead><tbody>${list.slice(0,100).map(f=>`<tr><td class="num">${dl(f.tgl)}, ${f.jam}</td><td>${f.asal} → ${f.tujuan}<br><span class="sub">${KOTA[f.asal]} ke ${KOTA[f.tujuan]}</span></td><td>${esc(f.maskapai)}<br><span class="sub">${f.kode}</span></td><td class="r num">${rp(f.harga)}</td>${pesan?`<td>${f.kursi>0?`<button data-act="pesan" data-fid="${f.id}">Pesan</button><br><span class="sub">${f.kursi} kursi</span>`:'<span class="sub">Penuh</span>'}</td>`:''}</tr>`).join('')}</tbody></table></div>${list.length>100?`<p class="sub">Menampilkan 100 dari ${list.length} penerbangan.</p>`:''}`}
+
+/* ---------- Tampilan ---------- */
+const V={};
+V.cari=()=>{const t=S.role==='travel';
+ return `<div id="book"></div><form class="panel" data-form="cari"><h2>${t?'Cari tiket untuk pengunjung':'Cari jadwal penerbangan'}</h2>
+ <div class="form">${t?`<label>Pengunjung<select id="f-visitor"><option value="">Pilih pengunjung</option><option value="v1">Dewi Lestari</option><option value="v2">Agus Salim</option></select></label>`:''}
+ <label>Kota asal<select id="f-asal">${kotaOpts(true)}</select></label><label>Tanggal<input type="date" id="f-tgl"></label></div>
+ <div class="stack"><span class="sub">Tujuan (boleh lebih dari satu)</span>${checks('tj')}</div><div><button type="submit">Cari penerbangan</button></div></form><div id="out"></div>`};
+V.untuk=V.cari;
+V.multi=()=>`<div id="book"></div><form class="panel" data-form="multi"><h2>Cari penerbangan multi-destinasi</h2>
+ <div class="form"><label>Lokasi keberangkatan<select id="f-asal">${kotaOpts(false)}</select></label><label>Dari tanggal<input type="date" id="f-dari"></label><label>Sampai tanggal<input type="date" id="f-sampai"></label></div>
+ <div class="stack"><span class="sub">Tujuan penerbangan</span>${checks('tj')}</div><div><button type="submit">Bandingkan harga dan jumlah penerbangan</button></div></form><div id="out"></div>`;
+V.bandingkan=()=>`<div id="book"></div><form class="panel" data-form="band"><h2>Bandingkan penerbangan</h2>
+ <div class="form"><label>Kota asal<select id="f-asal">${kotaOpts(true)}</select></label><label>Tujuan<select id="f-tj">${kotaOpts(false)}</select></label><label>Tanggal<input type="date" id="f-tgl"></label>
+ <label>Jam berangkat dari<input type="time" id="f-j1" value="00:00"></label><label>Sampai<input type="time" id="f-j2" value="23:59"></label></div><div><button type="submit">Tampilkan dan bandingkan</button></div></form><div id="out"></div>`;
+V.pesanan=()=>{const u=ROLE().u,mine=BK.filter(b=>b.owner===u).sort((a,b)=>b.at-a.at),m=S.role==='member';
+ return `<div id="msg"></div>${mine.length?`<div class="tw"><table><thead><tr><th>Kode</th><th>Penerbangan</th><th>Penumpang</th><th>Status</th><th></th></tr></thead><tbody>${mine.map(b=>{const f=fl(b.fid);return `<tr><td><b>${b.ref}</b></td><td>${f.asal} → ${f.tujuan}<br><span class="sub">${dl(f.tgl)}, ${f.jam} · ${esc(f.maskapai)} · ${rp(f.harga)}</span></td><td>${esc(b.penumpang)}</td><td>${badge(b.status)}</td><td>${b.status==='Cancelled'?'':
+ S.confirm===b.ref?`<span class="row"><span>Batalkan ${b.ref}?</span><button class="danger" data-act="batal-ya" data-ref="${b.ref}">Ya, batalkan</button><button class="ghost" data-act="batal-tidak">Tidak</button></span>`
+ :`<span class="row"><button class="ghost" data-act="batal" data-ref="${b.ref}">Batalkan</button>${m?`<button data-act="validasi" data-ref="${b.ref}">Validasi tiket</button>`:''}</span>`}</td></tr>`}).join('')}</tbody></table></div>`:'<p class="empty">Belum ada pesanan.</p>'}`};
+V.profil=()=>{const p=USERS.m1.profil;return `<form class="panel" data-form="profil"><h2>Data personal</h2><p class="sub">Semua kolom wajib terisi sebelum tiket dapat divalidasi.</p><div id="msg"></div>
+ <div class="form"><label>Nama lengkap<input id="p-nama" value="${esc(p.namaLengkap)}"></label><label>Nomor identitas (KTP/paspor)<input id="p-id" value="${esc(p.noIdentitas)}"></label><label>Tanggal lahir<input type="date" id="p-lahir" value="${esc(p.tglLahir)}"></label>
+ <label>Nomor telepon<input id="p-tel" value="${esc(p.telepon)}"></label><label>Kewarganegaraan<input id="p-wn" value="${esc(p.kewarganegaraan)}"></label></div><div><button type="submit">Simpan profil</button></div></form>
+ <p class="sub">Validasi tiket dilakukan dari tab Pesanan saya.</p>`};
+V.status=()=>`<div class="chips" id="chips">${['Semua','Confirmed','Booked','Waiting for the Payment'].map((s,i)=>`<button data-act="filter" data-s="${s}" aria-pressed="${i===0}">${s}</button>`).join('')}</div><div id="out"></div>`;
+V.otor=()=>`<form class="panel" data-form="otor"><h2>Otorisasi tiket</h2><div class="form"><label>Kode booking reference<input id="o-ref" autocomplete="off" placeholder="mis. TKT001"></label><button type="submit">Otorisasi</button></div>
+ <p class="sub">Contoh kode: ${BK.slice(0,3).map(b=>b.ref).join(', ')}</p></form><div id="out"></div>`;
+V.tiket=()=>{const u=S.visitor||'v1',mine=BK.filter(b=>b.owner===u);
+ return `<label style="max-width:240px">Masuk sebagai<select id="v-user" data-act="visitor"><option value="v1" ${u==='v1'?'selected':''}>Dewi Lestari</option><option value="v2" ${u==='v2'?'selected':''}>Agus Salim</option></select></label>
+ ${mine.length?`<div class="tw"><table><thead><tr><th>Kode</th><th>Penerbangan</th><th>Penumpang</th><th>Status</th></tr></thead><tbody>${mine.map(b=>{const f=fl(b.fid);return `<tr><td><b>${b.ref}</b></td><td>${f.asal} → ${f.tujuan}<br><span class="sub">${dl(f.tgl)}, ${f.jam} · ${esc(f.maskapai)}</span></td><td>${esc(b.penumpang)}</td><td>${badge(b.status)}</td></tr>`}).join('')}</tbody></table></div>`:'<p class="empty">Belum ada tiket di akun ini.</p>'}`};
+V.inbox=()=>{const u=S.visitor||'v1',m=EM.filter(e=>e.to===u);return `<p class="sub">Email terdaftar: ${USERS[u].email} (akun ${USERS[u].nama})</p>${m.length?m.map(e=>`<div class="mail"><b>${esc(e.subject)}</b><span class="sub">Kepada ${esc(USERS[e.to].email)}</span><p>${esc(e.body)}</p></div>`).join(''):'<p class="empty">Belum ada e-tiket yang masuk.</p>'}`};
+V.cuti=()=>`<form class="panel" data-form="cuti"><h2>Cuti pegawai</h2><div class="form"><label>Tanggal<select id="c-d"><option value="">Semua tanggal</option>${Array.from({length:31},(_,i)=>`<option>${i+1}</option>`).join('')}</select></label>
+ <label>Bulan<select id="c-m">${BLN.map((b,i)=>`<option value="${i+1}" ${i+1===new Date().getMonth()+1?'selected':''}>${b}</option>`).join('')}</select></label>
+ <label>Tahun<select id="c-y">${[THN-1,THN,THN+1].map(t=>`<option ${t===THN?'selected':''}>${t}</option>`).join('')}</select></label><button type="submit">Tampilkan</button></div></form><div id="out"></div><div id="detail"></div>`;
+
+function render(){
+ const r=ROLE(),tabs=TABS[S.role];if(!S.tab[S.role])S.tab[S.role]=tabs[0][0];const cur=S.tab[S.role];
+ $('#app').innerHTML=`<div class="top"><div><h1>Sistem Tiket Pesawat dan Cuti</h1><p class="sub">Aplikasi contoh dari 9 user story. Data bersifat contoh dan kembali awal saat halaman dimuat ulang.</p></div>
+ <label>Peran<select id="role">${ROLES.map(x=>`<option value="${x.k}" ${x.k===S.role?'selected':''}>${x.l} (${USERS[x.u].nama})</option>`).join('')}</select></label></div>
+ <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${k===cur}">${l}</button>`).join('')}</div><main class="stack" id="view">${V[cur]()}</main>`;
+ $('#role').onchange=e=>{S.role=e.target.value;S.confirm=null;render()};
+}
+const out=h=>{$('#out').innerHTML=h};
+const msg=(h)=>{const m=$('#msg')||$('#out');if(m)m.innerHTML=h};
+
+/* ---------- Form ---------- */
+const FORM={
+ cari(){const tj=sel('tj'),asal=$('#f-asal').value,tgl=$('#f-tgl').value;
+  if(S.role==='travel'&&!$('#f-visitor').value)return out(notif('Pilih pengunjung terlebih dahulu.','bad'));
+  if(!tj.length)return out(notif('Pilih minimal satu tujuan.','bad'));
+  const l=FL.filter(f=>tj.includes(f.tujuan)&&(!asal||f.asal===asal)&&(!tgl||f.tgl===tgl));
+  out(`<h3>${l.length} penerbangan ditemukan</h3>`+tbl(l))},
+ multi(){const tj=sel('tj'),asal=$('#f-asal').value,a=$('#f-dari').value,b=$('#f-sampai').value;
+  if(!tj.length)return out(notif('Pilih minimal satu tujuan.','bad'));
+  const l=FL.filter(f=>f.asal===asal&&tj.includes(f.tujuan)&&(!a||f.tgl>=a)&&(!b||f.tgl<=b));
+  const rows=tj.map(c=>{const x=l.filter(f=>f.tujuan===c);return {c,n:x.length,min:x.length?Math.min(...x.map(f=>f.harga)):0,avg:x.length?x.reduce((s,f)=>s+f.harga,0)/x.length:0}});
+  const best=rows.filter(r=>r.n).sort((p,q)=>p.min-q.min)[0];
+  out(`<h3>Perbandingan dari ${KOTA[asal]}</h3><div class="tw"><table><thead><tr><th>Tujuan</th><th class="r">Jumlah penerbangan</th><th class="r">Termurah</th><th class="r">Rata-rata</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${KOTA[r.c]} ${best&&best.c===r.c?'<span class="badge b-ok">harga termurah</span>':''}</td><td class="r num">${r.n}</td><td class="r num">${r.n?rp(r.min):'-'}</td><td class="r num">${r.n?rp(r.avg):'-'}</td></tr>`).join('')}</tbody></table></div><h3>Daftar penerbangan</h3>`+tbl(l))},
+ band(){const asal=$('#f-asal').value,tj=$('#f-tj').value,tgl=$('#f-tgl').value,j1=$('#f-j1').value,j2=$('#f-j2').value;
+  const l=FL.filter(f=>f.tujuan===tj&&(!asal||f.asal===asal)&&(!tgl||f.tgl===tgl)&&f.jam>=j1&&f.jam<=j2).sort((a,b)=>a.harga-b.harga);
+  if(!l.length)return out('<p class="empty">Tidak ada penerbangan yang cocok. Ubah tanggal, asal, atau jam.</p>');
+  const min=l[0].harga;
+  out(`<h3>${l.length} penerbangan, urut harga termurah</h3><div class="tw"><table><thead><tr><th>Jadwal</th><th>Rute</th><th>Maskapai</th><th class="r">Harga</th><th class="r">Selisih</th><th></th></tr></thead><tbody>${l.slice(0,60).map((f,i)=>`<tr><td class="num">${dl(f.tgl)}, ${f.jam}</td><td>${f.asal} → ${f.tujuan}</td><td>${esc(f.maskapai)}</td><td class="r num">${rp(f.harga)} ${i===0?'<span class="badge b-ok">termurah</span>':''}</td><td class="r num">${f.harga===min?'-':'+'+rp(f.harga-min)}</td><td>${f.kursi>0?`<button data-act="pesan" data-fid="${f.id}">Pesan</button>`:'<span class="sub">Penuh</span>'}</td></tr>`).join('')}</tbody></table></div>`)},
+ profil(){const p=USERS.m1.profil;Object.assign(p,{namaLengkap:$('#p-nama').value.trim(),noIdentitas:$('#p-id').value.trim(),tglLahir:$('#p-lahir').value,telepon:$('#p-tel').value.trim(),kewarganegaraan:$('#p-wn').value.trim()});
+  const k=kurang();msg(k.length?notif('Profil tersimpan, tetapi belum lengkap: '+k.join(', ')+'.','info'):notif('Profil tersimpan dan sudah lengkap.','ok'))},
+ otor(){const r=$('#o-ref').value.trim().toUpperCase(),b=BK.find(x=>x.ref===r);
+  if(!b){out(notif('Kode booking reference tidak sesuai. Silakan masukkan ulang kode booking reference.','bad'));$('#o-ref').value='';$('#o-ref').focus();return}
+  const f=fl(b.fid);out(`<div class="panel"><h3>Booking ${b.ref} ${badge(b.status)}</h3><p>${f.asal} → ${f.tujuan}, ${dl(f.tgl)} ${f.jam}, ${esc(f.maskapai)} ${f.kode}</p><p>Penumpang: ${esc(b.penumpang)} · Pemesan: ${esc(USERS[b.owner].nama)}${b.by?' (dipesankan manajer travel)':''}</p></div>`)},
+ cuti(){const d=$('#c-d').value,m=+$('#c-m').value,yr=+$('#c-y').value;
+  const a=yr+'-'+pad(m)+'-'+pad(d||1),z=yr+'-'+pad(m)+'-'+pad(d||new Date(yr,m,0).getDate());
+  const l=CUTI.filter(c=>c.mulai<=z&&c.selesai>=a);$('#detail').innerHTML='';
+  out(`<h3>Periode ${d?d+' ':''}${BLN[m-1]} ${yr}: ${l.length} pengajuan</h3>`+(l.length?`<div class="tw"><table><thead><tr><th>Nama pegawai</th><th>Periode cuti</th><th class="r">Lama</th><th>Status</th></tr></thead><tbody>${l.map(c=>`<tr><td><button class="link" data-act="pegawai" data-id="${c.p}">${esc(peg(c.p).nama)}</button></td><td class="num">${dl(c.mulai)} - ${dl(c.selesai)}</td><td class="r num">${lama(c)} hari</td><td>${badge(c.status)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">Tidak ada pegawai yang mengajukan cuti pada periode ini.</p>'))}
+};
+function kurang(){const p=USERS.m1.profil,L={namaLengkap:'nama lengkap',noIdentitas:'nomor identitas',tglLahir:'tanggal lahir',telepon:'nomor telepon',kewarganegaraan:'kewarganegaraan'};return Object.keys(L).filter(k=>!p[k]).map(k=>L[k])}
+
+/* ---------- Aksi ---------- */
+const ACT={
+ tab(t){S.tab[S.role]=t.dataset.k;S.confirm=null;render()},
+ pesan(t){const f=fl(t.dataset.fid),tr=S.role==='travel';let owner=ROLE().u;
+  if(tr){owner=$('#f-visitor').value;if(!owner)return out(notif('Pilih pengunjung terlebih dahulu.','bad'))}
+  $('#book').innerHTML=`<div class="panel"><h2>Halaman pemesanan</h2><p>${f.asal} → ${f.tujuan} · ${dl(f.tgl)} ${f.jam} · ${esc(f.maskapai)} ${f.kode} · <b>${rp(f.harga)}</b></p>
+  ${tr?`<p>Atas nama pengunjung: <b>${esc(USERS[owner].nama)}</b> (${USERS[owner].email})</p>`:''}
+  <label style="max-width:320px">Nama penumpang<input id="b-nama" value="${esc(USERS[owner].nama)}"></label><div class="row"><button data-act="konfirm" data-fid="${f.id}" data-owner="${owner}">Konfirmasi pemesanan</button><button class="ghost" data-act="tutup">Batal</button></div><p id="b-msg"></p></div>`;
+  $('#book').scrollIntoView({behavior:'smooth',block:'start'})},
+ tutup(){$('#book').innerHTML=''},
+ konfirm(t){const f=fl(t.dataset.fid),owner=t.dataset.owner,nama=$('#b-nama').value.trim();
+  if(!nama)return $('#b-msg').innerHTML=notif('Nama penumpang wajib diisi.','bad');
+  if(f.kursi<=0)return $('#b-msg').innerHTML=notif('Kursi penerbangan ini sudah penuh.','bad');
+  const tr=S.role==='travel',b=addBk(f,owner,nama,tr?'t1':null,'Booked');let extra='';
+  if(tr){EM.push({to:owner,subject:'E-tiket '+b.ref,body:`Halo ${USERS[owner].nama}, e-tiket ${nama}: ${f.asal} → ${f.tujuan}, ${dl(f.tgl)} ${f.jam}, ${f.maskapai} ${f.kode}. Kode booking ${b.ref}.`});extra=`<p>E-tiket dikirim ke ${USERS[owner].email}.</p>`}
+  $('#book').innerHTML=`<div class="panel">${notif('Pemesanan berhasil.','ok')}<p>Kode booking reference: <b>${b.ref}</b> ${badge(b.status)}</p>${extra}<div><button class="ghost" data-act="tutup">Tutup</button></div></div>`},
+ batal(t){S.confirm=t.dataset.ref;render()},'batal-tidak'(){S.confirm=null;render()},
+ 'batal-ya'(t){const b=BK.find(x=>x.ref===t.dataset.ref);b.status='Cancelled';fl(b.fid).kursi++;S.confirm=null;render();msg(notif(`Pesanan ${b.ref} berhasil dibatalkan.`,'ok'))},
+ validasi(t){const k=kurang();msg(k.length?notif('Data profil tidak lengkap. Validasi tiket ditolak sampai profil lengkap (kurang: '+k.join(', ')+'). Lengkapi di tab Profil dan validasi.','bad'):notif(`Tiket ${t.dataset.ref} berhasil divalidasi berdasarkan data profil ${esc(USERS.m1.profil.namaLengkap)}.`,'ok'))},
+ filter(t){document.querySelectorAll('#chips button').forEach(b=>b.setAttribute('aria-pressed',b===t));const s=t.dataset.s;listBk(s)},
+ visitor(t){S.visitor=t.value;render()},
+ pegawai(t){const p=peg(t.dataset.id),r=CUTI.filter(c=>c.p===p.id).sort((a,b)=>b.mulai.localeCompare(a.mulai)),used=r.filter(c=>c.status==='Disetujui'&&c.mulai.startsWith(THN)).reduce((s,c)=>s+lama(c),0);
+  $('#detail').innerHTML=`<div class="panel"><h3>${esc(p.nama)}</h3><p>Sisa cuti ${THN}: <b>${p.jatah-used} hari</b> dari ${p.jatah} hari (terpakai ${used} hari, hanya cuti disetujui).</p><div class="tw"><table><thead><tr><th>Riwayat cuti</th><th class="r">Lama</th><th>Status</th></tr></thead><tbody>${r.map(c=>`<tr><td class="num">${dl(c.mulai)} - ${dl(c.selesai)}</td><td class="r num">${lama(c)} hari</td><td>${badge(c.status)}</td></tr>`).join('')}</tbody></table></div></div>`;$('#detail').scrollIntoView({behavior:'smooth',block:'nearest'})}
+};
+function listBk(s){const l=BK.filter(b=>s==='Semua'||b.status===s);
+ out(l.length?`<div class="tw"><table><thead><tr><th>Kode</th><th>Penerbangan</th><th>Pemesan / penumpang</th><th>Status</th></tr></thead><tbody>${l.map(b=>{const f=fl(b.fid);return `<tr><td><b>${b.ref}</b></td><td>${f.asal} → ${f.tujuan}<br><span class="sub">${dl(f.tgl)}, ${f.jam} · ${esc(f.maskapai)}</span></td><td>${esc(USERS[b.owner].nama)}<br><span class="sub">${esc(b.penumpang)}${b.by?' · dipesankan manajer travel':''}</span></td><td>${badge(b.status)}</td></tr>`}).join('')}</tbody></table></div><p class="sub">${l.length} booking</p>`:'<p class="empty">Tidak ada booking dengan status ini.</p>')}
+
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&t.tagName!=='SELECT'&&ACT[t.dataset.act]){ACT[t.dataset.act](t,e)}});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.act==='visitor')ACT.visitor(e.target)});
+document.addEventListener('submit',e=>{e.preventDefault();const f=e.target.dataset.form;if(FORM[f])FORM[f]()});
+const _r=render;render=function(){_r();if(S.role==='travel'&&S.tab.travel==='status')listBk('Semua')};
+render();
+</script>
+
+</body>
+</html>
